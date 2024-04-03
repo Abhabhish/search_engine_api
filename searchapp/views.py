@@ -15,7 +15,10 @@ import time
 import json
 
 def all(img_url):
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    options = Options()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     wait=WebDriverWait(driver,10)
 
     def bing(img_url):
