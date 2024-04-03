@@ -20,6 +20,12 @@ def all(img_url):
     options = Options()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+
+    options.add_argument('--headless')  # Run in headless mode
+    options.add_argument('--no-sandbox')  # Bypass OS security model
+    options.add_argument('--disable-dev-shm-usage')
+
+
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     wait=WebDriverWait(driver,10)
 
