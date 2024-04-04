@@ -31,7 +31,12 @@ def all(img_url):
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'See related image detail.')]")))
+        try:
+            wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'See related image detail.')]")))
+        except TimeoutException:
+            driver.save_screenshot('timeout_debug.png')
+            raise
+
         # wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
         related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, 'See related image detail.')]")
