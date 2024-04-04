@@ -31,8 +31,8 @@ def all(img_url):
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
-        # wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'See related image detail.')]")))
-        time.sleep(3)
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//a[contains(@class, 'richImgLnk')]")))
+        # time.sleep(3)
         related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, 'See related image detail.')]")
 
         related_image_urls = []
