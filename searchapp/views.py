@@ -85,7 +85,7 @@ def all(img_url):
 
         
     return {
-                # 'bing':bing(img_url),
+                'bing':bing(img_url),
                 'google_lense':google_lense(img_url),
                 'yandex':yandex(img_url),
                 'naver':naver(img_url)
