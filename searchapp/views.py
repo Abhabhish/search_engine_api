@@ -31,16 +31,15 @@ def all(img_url):
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//a[contains(@class, 'richImgLnk')]")))
-        # time.sleep(3)
-        related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, 'See related image detail.')]")
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'See related image detail.')]")))
+        # related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, 'See related image detail.')]")
 
         related_image_urls = []
-        for image in related_images:
-            if image.get_attribute('src').startswith('https://'):
-                url = image.get_attribute('src').split('&')[0]
-                related_image_urls.append(url)
-                break
+        # for image in related_images:
+        #     if image.get_attribute('src').startswith('https://'):
+        #         url = image.get_attribute('src').split('&')[0]
+        #         related_image_urls.append(url)
+        #         break
         return related_image_urls
 
     def google_lense(img_url):
