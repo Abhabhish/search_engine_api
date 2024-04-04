@@ -16,6 +16,17 @@ from selenium.webdriver.chrome.options import Options
 import time
 import json
 
+
+import numpy as np
+import requests
+from skimage import io, img_as_float
+from skimage.metrics import structural_similarity as ssim
+from skimage.color import rgb2gray
+from skimage.transform import resize
+
+
+import concurrent.futures
+
 def all(img_url):
     options = Options()
     options.add_argument('--no-sandbox')
@@ -45,10 +56,13 @@ def all(img_url):
 
         related_image_urls = []
         for image in related_images:
-            if image.get_attribute('src').startswith('https://'):
-                url = image.get_attribute('src').split('&')[0]
-                related_image_urls.append(url)
-                break
+            link = image.get_attribute('src')
+            if link.startswith('https://'):
+                url = link.split('&')[0]
+                related_image_urls.append({'engine':'bing','url':url})
+                if len(related_image_urls)==2:
+                    break
+            time.sleep(1)
         return related_image_urls
 
     def google_lense(img_url):
@@ -58,9 +72,13 @@ def all(img_url):
         
         related_image_urls = []
         for image in related_images:
-            if image.get_attribute('src').startswith('https://'):
-                related_image_urls.append(image.get_attribute('src'))
-                break
+            link = image.get_attribute('src')
+            if link.startswith('https://'):
+                url = link
+                related_image_urls.append({'engine':'google_lense','url':url})
+                if len(related_image_urls)==2:
+                    break
+            time.sleep(1)
         return related_image_urls
 
     def yandex(img_url):
@@ -72,9 +90,13 @@ def all(img_url):
 
         related_image_urls = []
         for image in related_images:
-            if image.get_attribute('src').startswith('https://'):
-                related_image_urls.append(image.get_attribute('src'))
-                break
+            link = image.get_attribute('src')
+            if link.startswith('https://'):
+                url = link
+                related_image_urls.append({'engine':'yandex','url':url})
+                if len(related_image_urls)==2:
+                    break
+            time.sleep(1)
         return related_image_urls
 
 
@@ -86,19 +108,49 @@ def all(img_url):
 
         related_image_urls = []
         for image in related_images:
-            if image.get_attribute('src').startswith('https://'):
-                url = image.get_attribute('src').split('&')[0]
-                related_image_urls.append(url)
-                break
+            link = image.get_attribute('src')
+            if link.startswith('https://'):
+                url = link.split('&')[0]
+                related_image_urls.append({'engine':'naver','url':url})
+                if len(related_image_urls)==2:
+                    break
+            time.sleep(1)
         return related_image_urls
 
-        
-    return {
-                'bing':bing(img_url),
-                'google_lense':google_lense(img_url),
-                'yandex':yandex(img_url),
-                'naver':naver(img_url)
-            }
+    all_urls = []
+    all_urls.extend(bing(img_url))
+    all_urls.extend(google_lense(img_url))
+    all_urls.extend(yandex(img_url))
+    all_urls.extend(naver(img_url))
+    return all_urls
+
+
+def main(img_url,url):
+    def download_image(url):
+        response = requests.get(url)
+        image = io.imread(response.content, plugin='imageio')
+        return img_as_float(image)
+    def compare_images(image1, image2):
+        image2_resized = resize(image2, image1.shape[:2], anti_aliasing=True)        
+        gray_image1 = rgb2gray(image1)
+        gray_image2 = rgb2gray(image2_resized)        
+        similarity_index, _ = ssim(gray_image1, gray_image2, full=True, data_range=1)
+        return similarity_index
+    url1 = img_url
+    url2 = url['url']
+    image1 = download_image(url1)
+    image2 = download_image(url2)
+    similarity = compare_images(image1, image2)
+    url['score'] = similarity * 100
+    return url
+
+def similarity_score(img_url, all_urls):
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(main, img_url, url) for url in all_urls]
+        for future in concurrent.futures.as_completed(futures):
+            results.append(future.result())
+    return results
 
 
 @csrf_exempt
@@ -106,7 +158,9 @@ def search(request):
     if request.method == 'POST':
         img_url = request.POST.get('img_url')
         if img_url:
-            response = all(img_url)
+            all_urls = all(img_url)
+            # response = similarity_score(img_url,all_urls)
+            response = [{**url, 'score': 50} for url in all_urls]
             return JsonResponse(response,safe=False)
         else:
             return JsonResponse({'error': 'No image URL provided'}, status=400)
