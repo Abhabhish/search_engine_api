@@ -27,7 +27,7 @@ def all(img_url):
 
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    wait=WebDriverWait(driver,10)
+    wait=WebDriverWait(driver,30)
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
