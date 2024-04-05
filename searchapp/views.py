@@ -200,7 +200,14 @@ def search(request):
             all_urls = all(img_url)
             # response = main(img_url,all_urls)
             response = [{**url, 'score': 50} for url in all_urls]
-            return JsonResponse(response,safe=False)
+
+            response_dict = {}
+            for r in response:
+                if r['engine'] not in response_dict:
+                    response_dict[r['engine']] = []
+                response_dict[r['engine']].append([r['url'],r['score']])
+
+            return JsonResponse(response_dict,safe=False)
         else:
             return JsonResponse({'error': 'No image URL provided'}, status=400)
     else:
