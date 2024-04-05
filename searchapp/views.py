@@ -60,7 +60,7 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'bing','url':url})
-                if len(related_image_urls)==2:
+                if len(related_image_urls)==5:
                     break
             time.sleep(1)
         return related_image_urls
@@ -76,7 +76,7 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'google_lense','url':url})
-                if len(related_image_urls)==2:
+                if len(related_image_urls)==5:
                     break
             time.sleep(1)
         return related_image_urls
@@ -94,7 +94,7 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'yandex','url':url})
-                if len(related_image_urls)==2:
+                if len(related_image_urls)==5:
                     break
             time.sleep(1)
         return related_image_urls
@@ -112,7 +112,7 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'naver','url':url})
-                if len(related_image_urls)==2:
+                if len(related_image_urls)==5:
                     break
             time.sleep(1)
         return related_image_urls
@@ -124,33 +124,76 @@ def all(img_url):
     all_urls.extend(naver(img_url))
     return all_urls
 
+######################################
+# def main(img_url,url):
+#     def download_image(url):
+#         response = requests.get(url)
+#         image = io.imread(response.content, plugin='imageio')
+#         return img_as_float(image)
+#     def compare_images(image1, image2):
+#         image2_resized = resize(image2, image1.shape[:2], anti_aliasing=True)        
+#         gray_image1 = rgb2gray(image1)
+#         gray_image2 = rgb2gray(image2_resized)        
+#         similarity_index, _ = ssim(gray_image1, gray_image2, full=True, data_range=1)
+#         return similarity_index
+#     url1 = img_url
+#     url2 = url['url']
+#     image1 = download_image(url1)
+#     image2 = download_image(url2)
+#     similarity = compare_images(image1, image2)
+#     url['score'] = similarity * 100
+#     return url
 
-def main(img_url,url):
-    def download_image(url):
-        response = requests.get(url)
-        image = io.imread(response.content, plugin='imageio')
-        return img_as_float(image)
-    def compare_images(image1, image2):
-        image2_resized = resize(image2, image1.shape[:2], anti_aliasing=True)        
-        gray_image1 = rgb2gray(image1)
-        gray_image2 = rgb2gray(image2_resized)        
-        similarity_index, _ = ssim(gray_image1, gray_image2, full=True, data_range=1)
-        return similarity_index
-    url1 = img_url
-    url2 = url['url']
-    image1 = download_image(url1)
-    image2 = download_image(url2)
-    similarity = compare_images(image1, image2)
-    url['score'] = similarity * 100
-    return url
+# def similarity_score(img_url, all_urls):
+#     results = []
+#     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+#         futures = [executor.submit(main, img_url, url) for url in all_urls]
+#         for future in concurrent.futures.as_completed(futures):
+#             results.append(future.result())
+#     return results
 
-def similarity_score(img_url, all_urls):
-    results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(main, img_url, url) for url in all_urls]
-        for future in concurrent.futures.as_completed(futures):
-            results.append(future.result())
-    return results
+################################################################################################################################
+# import numpy as np
+# import requests
+# from skimage import io, img_as_float
+# from skimage.metrics import structural_similarity as ssim
+# from skimage.color import rgb2gray
+# from skimage.transform import resize
+# from multiprocessing import Pool
+
+# image_cache = {}
+
+# def download_image(url):
+#     if url in image_cache:
+#         return image_cache[url]
+#     response = requests.get(url)
+#     image = io.imread(response.content, plugin='imageio')
+#     image_cache[url] = img_as_float(image)
+#     return image_cache[url]
+
+# def compare_images(image_pair):
+#     image1, image2 = image_pair
+#     image2_resized = resize(image2, image1.shape[:2], anti_aliasing=True)
+#     gray_image1 = rgb2gray(image1)
+#     gray_image2 = rgb2gray(image2_resized)
+#     similarity_index, _ = ssim(gray_image1, gray_image2, full=True, data_range=1)
+#     return similarity_index
+
+# def main(img_url, urls):
+#     image1 = download_image(img_url)
+#     image_pairs = [(image1, download_image(url['url'])) for url in urls]
+
+#     with Pool() as pool:
+#         similarities = pool.map(compare_images, image_pairs)
+
+#     for url, similarity in zip(urls, similarities):
+#         url['score'] = similarity * 100
+
+#     return urls
+######################
+
+
+
 
 
 @csrf_exempt
@@ -159,7 +202,7 @@ def search(request):
         img_url = request.POST.get('img_url')
         if img_url:
             all_urls = all(img_url)
-            # response = similarity_score(img_url,all_urls)
+            # response = main(img_url,all_urls)
             response = [{**url, 'score': 50} for url in all_urls]
             return JsonResponse(response,safe=False)
         else:
