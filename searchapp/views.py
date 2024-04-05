@@ -54,7 +54,7 @@ def all(img_url):
                 related_image_urls.append({'engine':'bing','url':url})
                 if len(related_image_urls)==5:
                     break
-            time.sleep(1)
+            time.sleep(0.3)
         return related_image_urls
 
     def google_lense(img_url):
@@ -70,7 +70,7 @@ def all(img_url):
                 related_image_urls.append({'engine':'google_lense','url':url})
                 if len(related_image_urls)==5:
                     break
-            time.sleep(1)
+            time.sleep(0.3)
         return related_image_urls
 
     def yandex(img_url):
@@ -88,7 +88,7 @@ def all(img_url):
                 related_image_urls.append({'engine':'yandex','url':url})
                 if len(related_image_urls)==5:
                     break
-            time.sleep(1)
+            time.sleep(0.3)
         return related_image_urls
 
 
@@ -106,7 +106,7 @@ def all(img_url):
                 related_image_urls.append({'engine':'naver','url':url})
                 if len(related_image_urls)==5:
                     break
-            time.sleep(1)
+            time.sleep(0.3)
         return related_image_urls
 
     all_urls = []
@@ -190,39 +190,7 @@ def all(img_url):
 #         url['score'] = similarity * 100
 
 #     return urls
-#############################################################################Average Hash
-# from PIL import Image
-# import imagehash
-# import io
-# import requests
-
-# image_cache = {}
-
-# def download_image(url):
-#     if url in image_cache:
-#         return image_cache[url]
-#     response = requests.get(url)
-#     image = Image.open(io.BytesIO(response.content))
-#     image_cache[url] = image
-#     return image
-
-# def calculate_average_hash(image):
-#     return str(imagehash.average_hash(image))
-
-# def main(img_url, urls):
-#     image1 = download_image(img_url)
-#     image1_hash = calculate_average_hash(image1)
-#     matching_urls = []
-
-#     for url in urls:
-#         image2 = download_image(url['url'])
-#         image2_hash = calculate_average_hash(image2)
-#         if image1_hash == image2_hash:
-#             matching_urls.append(url['url'])
-
-#     return matching_urls
-#################################################################
-
+#############################################################################
 
 @csrf_exempt
 def search(request):
