@@ -17,15 +17,7 @@ import time
 import json
 
 
-import numpy as np
-import requests
-from skimage import io, img_as_float
-from skimage.metrics import structural_similarity as ssim
-from skimage.color import rgb2gray
-from skimage.transform import resize
 
-
-import concurrent.futures
 
 def all(img_url):
     options = Options()
@@ -124,7 +116,15 @@ def all(img_url):
     all_urls.extend(naver(img_url))
     return all_urls
 
-######################################
+###################################### MY
+# import numpy as np
+# import requests
+# from skimage import io, img_as_float
+# from skimage.metrics import structural_similarity as ssim
+# from skimage.color import rgb2gray
+# from skimage.transform import resize
+# import concurrent.futures
+
 # def main(img_url,url):
 #     def download_image(url):
 #         response = requests.get(url)
@@ -152,7 +152,7 @@ def all(img_url):
 #             results.append(future.result())
 #     return results
 
-################################################################################################################################
+#############################################################SIR
 # import numpy as np
 # import requests
 # from skimage import io, img_as_float
@@ -190,10 +190,38 @@ def all(img_url):
 #         url['score'] = similarity * 100
 
 #     return urls
-######################
+#############################################################################Average Hash
+# from PIL import Image
+# import imagehash
+# import io
+# import requests
 
+# image_cache = {}
 
+# def download_image(url):
+#     if url in image_cache:
+#         return image_cache[url]
+#     response = requests.get(url)
+#     image = Image.open(io.BytesIO(response.content))
+#     image_cache[url] = image
+#     return image
 
+# def calculate_average_hash(image):
+#     return str(imagehash.average_hash(image))
+
+# def main(img_url, urls):
+#     image1 = download_image(img_url)
+#     image1_hash = calculate_average_hash(image1)
+#     matching_urls = []
+
+#     for url in urls:
+#         image2 = download_image(url['url'])
+#         image2_hash = calculate_average_hash(image2)
+#         if image1_hash == image2_hash:
+#             matching_urls.append(url['url'])
+
+#     return matching_urls
+#################################################################
 
 
 @csrf_exempt
