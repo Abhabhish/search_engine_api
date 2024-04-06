@@ -110,7 +110,7 @@ def all(img_url):
         return related_image_urls
 
     all_urls = []
-    all_urls.extend(bing(img_url))
+    # all_urls.extend(bing(img_url))
     all_urls.extend(google_lense(img_url))
     all_urls.extend(yandex(img_url))
     all_urls.extend(naver(img_url))
