@@ -32,15 +32,15 @@ def all(img_url):
 
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    wait=WebDriverWait(driver,30)
+    wait=WebDriverWait(driver,15)
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
         try:
             wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'See related image detail.')]")))
         except:
-            driver.save_screenshot('timeout_debug.png')
-            raise
+            driver.save_screenshot('bing.png')
+            return []
 
         # wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
@@ -59,7 +59,14 @@ def all(img_url):
 
     def google_lense(img_url):
         driver.get(f'https://lens.google.com/uploadbyurl?url={img_url}')
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@class, 'wETe9b jFVN1')]")))
+
+        try:
+           wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@class, 'wETe9b jFVN1')]")))
+        except:
+            driver.save_screenshot('lense.png')
+            return []
+
+
         related_images = driver.find_elements(By.XPATH,"//img[contains(@class, 'wETe9b jFVN1')]")
         
         related_image_urls = []
@@ -75,9 +82,14 @@ def all(img_url):
 
     def yandex(img_url):
         driver.get(f'https://yandex.com/images/search?rpt=imageview&url={img_url}')
-        similar_btn = driver.find_element(By.XPATH,"//a[contains(@class, 'CbirNavigation-TabsItem CbirNavigation-TabsItem_name_similar-page')]")
-        similar_btn.click()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@class, 'serp-item__thumb justifier__thumb')]")))
+        try:
+            similar_btn = driver.find_element(By.XPATH,"//a[contains(@class, 'CbirNavigation-TabsItem CbirNavigation-TabsItem_name_similar-page')]")
+            similar_btn.click()
+            wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@class, 'serp-item__thumb justifier__thumb')]")))
+        except:
+            driver.save_screenshot('yandex.png')
+            return []
+
         related_images = driver.find_elements(By.XPATH,"//img[contains(@class, 'serp-item__thumb justifier__thumb')]")
 
         related_image_urls = []
@@ -95,7 +107,12 @@ def all(img_url):
 
     def naver(img_url):
         driver.get(f'https://s.search.naver.com/p/sbi/search.naver?where=sbi&query=smartlens&orgPath={img_url}')
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, '이미지준비중')]")))
+        try:
+            wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, '이미지준비중')]")))
+        except:
+            driver.save_screenshot('naver.png')
+            return []
+
         related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, '이미지준비중')]")
 
         related_image_urls = []
@@ -110,7 +127,7 @@ def all(img_url):
         return related_image_urls
 
     all_urls = []
-    # all_urls.extend(bing(img_url))
+    all_urls.extend(bing(img_url))
     all_urls.extend(google_lense(img_url))
     all_urls.extend(yandex(img_url))
     all_urls.extend(naver(img_url))
