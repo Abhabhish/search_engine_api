@@ -226,7 +226,11 @@ def main(img_url,url):
         Payload=json.dumps(payload)
     )
     response_payload = json.loads(response['Payload'].read())
-    score = response_payload['similarity_score']
+    print(response_payload)
+    try:
+        score = response_payload['similarity_score']
+    except:
+        score = 0
     url['score'] = score
     return url
 
