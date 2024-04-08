@@ -32,7 +32,7 @@ def all(img_url):
 
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    wait=WebDriverWait(driver,15)
+    wait=WebDriverWait(driver,10)
 
     def bing(img_url):
         driver.get(f'https://www.bing.com/images/searchbyimage?cbir=ssbi&imgurl={img_url}')
@@ -52,9 +52,9 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'bing','url':url})
-                if len(related_image_urls)==5:
+                if len(related_image_urls)==50:
                     break
-            time.sleep(0.3)
+            time.sleep(0.1)
         return related_image_urls
 
     def google_lense(img_url):
@@ -75,9 +75,9 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'google_lense','url':url})
-                if len(related_image_urls)==5:
+                if len(related_image_urls)==50:
                     break
-            time.sleep(0.3)
+            # time.sleep(0.3)
         return related_image_urls
 
     def yandex(img_url):
@@ -98,9 +98,9 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'yandex','url':url})
-                if len(related_image_urls)==5:
+                if len(related_image_urls)==50:
                     break
-            time.sleep(0.3)
+            # time.sleep(0.3)
         return related_image_urls
 
 
@@ -121,9 +121,9 @@ def all(img_url):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'naver','url':url})
-                if len(related_image_urls)==5:
+                if len(related_image_urls)==50:
                     break
-            time.sleep(0.3)
+            time.sleep(0.1)
         return related_image_urls
 
     all_urls = []
@@ -207,7 +207,39 @@ def all(img_url):
 #         url['score'] = similarity * 100
 
 #     return urls
-#############################################################################
+############################################################################# Lambda Function
+import boto3
+import json
+import concurrent.futures
+
+lambda_client = boto3.client('lambda')
+
+
+def main(img_url,url):
+    payload = {
+        'url1': img_url,
+        'url2': url['url']
+    }
+    response = lambda_client.invoke(
+        FunctionName='test',
+        InvocationType='RequestResponse',
+        Payload=json.dumps(payload)
+    )
+    response_payload = json.loads(response['Payload'].read())
+    score = response_payload['similarity_score']
+    url['score'] = score
+    return url
+
+def similarity_score(img_url, all_urls):
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=200) as executor:
+        futures = [executor.submit(main, img_url, url) for url in all_urls]
+        for future in concurrent.futures.as_completed(futures):
+            results.append(future.result())
+    return results
+###############################################################################################
+
+
 
 @csrf_exempt
 def search(request):
@@ -215,14 +247,15 @@ def search(request):
         img_url = request.POST.get('img_url')
         if img_url:
             all_urls = all(img_url)
-            # response = main(img_url,all_urls)
-            response = [{**url, 'score': 50} for url in all_urls]
+            response = similarity_score(img_url,all_urls)
+            # response = [{**url, 'score': 50} for url in all_urls]
 
             response_dict = {}
             for r in response:
-                if r['engine'] not in response_dict:
-                    response_dict[r['engine']] = []
-                response_dict[r['engine']].append([r['url'],r['score']])
+                if r['score']>10:
+                    if r['engine'] not in response_dict:
+                        response_dict[r['engine']] = []
+                    response_dict[r['engine']].append([r['url'],r['score']])
 
             return JsonResponse(response_dict,safe=False)
         else:
