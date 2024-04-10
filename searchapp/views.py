@@ -2,9 +2,6 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
-# Create your views here.
-
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -12,12 +9,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from google.cloud import vision
+import os
+from django.conf import settings
+
 
 import time
 import json
-
-
-
 
 def get_realted(img_url,engine):
     options = Options()
@@ -28,8 +26,6 @@ def get_realted(img_url,engine):
     options.add_argument('--no-sandbox')  # Bypass OS security model
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36')
-
-
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     wait=WebDriverWait(driver,10)
@@ -52,7 +48,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'bing','url':url})
-                if len(related_image_urls)==50:
+                if len(related_image_urls)==10:
                     break
             time.sleep(0.1)
         return related_image_urls
@@ -75,10 +71,33 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'google_lense','url':url})
-                if len(related_image_urls)==50:
+                if len(related_image_urls)==10:
                     break
             # time.sleep(0.3)
         return related_image_urls
+
+    
+    def tineye(img_url):
+        driver.get(f'https://tineye.com/search?url={img_url}')
+
+        try:
+           wait.until(EC.visibility_of_element_located((By.XPATH, "//img[contains(@alt, 'Result image')]")))
+        except:
+            driver.save_screenshot('tineye.png')
+            return []
+        related_images = driver.find_elements(By.XPATH,"//img[contains(@alt, 'Result image')]")
+        
+        related_image_urls = []
+        for image in related_images:
+            link = image.get_attribute('src')
+            if link.startswith('https://'):
+                url = link.replace('?size=160','?size=2000')
+                related_image_urls.append({'engine':'tineye','url':url})
+                if len(related_image_urls)==10:
+                    break
+            # time.sleep(0.3)
+        return related_image_urls
+
 
     def yandex(img_url):
         driver.get(f'https://yandex.com/images/search?rpt=imageview&url={img_url}')
@@ -98,7 +117,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'yandex','url':url})
-                if len(related_image_urls)==50:
+                if len(related_image_urls)==10:
                     break
             # time.sleep(0.3)
         return related_image_urls
@@ -121,10 +140,37 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'naver','url':url})
-                if len(related_image_urls)==50:
+                if len(related_image_urls)==10:
                     break
             time.sleep(0.1)
         return related_image_urls
+
+
+    def google(img_url):
+        google_credentials_path = os.path.join(settings.BASE_DIR, 'harsh.json')
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = google_credentials_path
+        try:
+            client = vision.ImageAnnotatorClient()
+            image = vision.Image()
+            image.source.image_uri = img_url
+            response = client.web_detection(image=image)
+            annotations = response.web_detection
+
+            all_matching_images = []
+            all_matching_images.extend(annotations.full_matching_images)
+            all_matching_images.extend(annotations.partial_matching_images)
+            all_matching_images.extend(annotations.visually_similar_images)
+
+            related_image_urls = []
+            for img in all_matching_images:
+                related_image_urls.append({'engine':'google','url':img.url})
+                if len(related_image_urls)==10:
+                    break
+            return related_image_urls
+        except Exception as e:
+            print(e)
+            return []
+
 
     if engine == 'bing':
        return bing(img_url)
@@ -134,6 +180,10 @@ def get_realted(img_url,engine):
        return yandex(img_url)
     if engine == 'naver':
        return naver(img_url)
+    if engine == 'tineye':
+       return tineye(img_url)
+    if engine == 'google':
+       return google(img_url)
 
 ####################################################################Check Similarity
 import boto3
@@ -182,7 +232,7 @@ def search(request):
     if request.method == 'POST':
         img_url = request.POST.get('img_url')
         if img_url:
-            all_urls = search_engine(img_url,['google_lense','bing','naver','yandex'])
+            all_urls = search_engine(img_url,['google_lense','bing','naver','yandex','tineye','google'])
             response = similarity_score(img_url,all_urls)
             # response = [{**url, 'score': 50} for url in all_urls]
 
