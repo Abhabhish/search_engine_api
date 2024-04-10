@@ -48,7 +48,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'bing','url':url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             time.sleep(0.1)
         return related_image_urls
@@ -71,7 +71,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'google_lense','url':url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             # time.sleep(0.3)
         return related_image_urls
@@ -93,7 +93,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link.replace('?size=160','?size=2000')
                 related_image_urls.append({'engine':'tineye','url':url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             # time.sleep(0.3)
         return related_image_urls
@@ -117,7 +117,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link
                 related_image_urls.append({'engine':'yandex','url':url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             # time.sleep(0.3)
         return related_image_urls
@@ -140,7 +140,7 @@ def get_realted(img_url,engine):
             if link.startswith('https://'):
                 url = link.split('&')[0]
                 related_image_urls.append({'engine':'naver','url':url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             time.sleep(0.1)
         return related_image_urls
@@ -164,7 +164,7 @@ def get_realted(img_url,engine):
             related_image_urls = []
             for img in all_matching_images:
                 related_image_urls.append({'engine':'google','url':img.url})
-                if len(related_image_urls)==10:
+                if len(related_image_urls)==15:
                     break
             return related_image_urls
         except Exception as e:
